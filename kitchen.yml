@@ -56,21 +56,6 @@ suites:
       - recipe[firewall::default]
       - recipe[firewall-test::default]
 
-  - name: ufw
-    excludes:
-      - almalinux-8
-      - amazonlinux-2
-      - centos-7
-      - centos-8
-      - fedora-latest
-      - freebsd-11
-      - freebsd-12
-      - opensuse-leap-15
-      - oracle-8
-    run_list:
-      - recipe[firewall::default]
-      - recipe[firewall-test::default]
-
   - name: iptables
     excludes:
       - debian-9
@@ -83,7 +68,6 @@ suites:
       - recipe[firewall-test::default]
     attributes:
       firewall:
-        ubuntu_iptables: true
         redhat7_iptables: true
 
   - name: nftables

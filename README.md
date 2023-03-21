@@ -24,26 +24,19 @@ depends 'firewall'
 
 ### Supported firewalls and platforms
 
-- UFW - Ubuntu, Debian (except 9)
 - IPTables - Red Hat & CentOS, Ubuntu
 - FirewallD - Red Hat & CentOS >= 7.0 (IPv4 only support, [needs contributions/testing](https://github.com/chef-cookbooks/firewall/issues/86))
 - nftables
 
 Tested on:
 
-- Ubuntu 16.04 with iptables, ufw
+- Ubuntu 16.04 with iptables
 - Debian 9 with iptables
 - Debian 11 with nftables
 - Debian 11 with new resources for firewalld
 - CentOS 6 with iptables
 - CentOS 7.1 with firewalld
 - Oracle 8 with nftables
-
-By default, Ubuntu chooses ufw. To switch to iptables, set this in an attribute file:
-
-```ruby
-default['firewall']['ubuntu_iptables'] = true
-```
 
 By default, Red Hat & CentOS >= 7.0 chooses firewalld. To switch to iptables, set this in an attribute file:
 
@@ -121,10 +114,8 @@ Used to disable platform specific firewall. Many clouds have their own firewall 
 - `default['firewall']['allow_ssh'] = false`, set true to open port 22 for SSH when the default recipe runs
 - `default['firewall']['allow_mosh'] = false`, set to true to open UDP ports 60000 - 61000 for [Mosh][0] when the default recipe runs
 - `default['firewall']['allow_loopback'] = false`, set to true to allow all traffic on the loopback interface
-- `default['firewall']['allow_icmp'] = false`, set true to allow icmp protocol on supported OSes (note: ufw implementation doesn't support this)
-- `default['firewall']['ubuntu_iptables'] = false`, set to true to use iptables on Ubuntu / Debian when using the default recipe
+- `default['firewall']['allow_icmp'] = false`, set true to allow icmp protocol on supported OSes
 - `default['firewall']['redhat7_iptables'] = false`, set to true to use iptables on Red Hat / CentOS 7 when using the default recipe
-- `default['firewall']['ufw']['defaults']` hash for template `/etc/default/ufw`
 - `default['firewall']['iptables']['defaults']` hash for default policies for 'filter' table's chains`
 - `default['firewall']['allow_established'] = true`, set to false if you don't want a related/established default rule on iptables
 - `default['firewall']['ipv6_enabled'] = true`, set to false if you don't want IPv6 related/established default rule on iptables (this enables ICMPv6, which is required for much of IPv6 communication)
@@ -143,13 +134,12 @@ There is a separate folder for [`firewalld` resources](documentation/README.md).
 - `:install` (*default action*): Install and Enable the firewall. This will ensure the appropriate packages are installed and that any services have been started.
 - `:disable`: Disable the firewall. Drop any rules and put the node in an unprotected state. Flush all current rules. Also erase any internal state used to detect when rules should be applied.
 - `:flush`: Flush all current rules. Also erase any internal state used to detect when rules should be applied.
-- `:save`: Ensure all rules are added permanently under firewalld using `--permanent`. Not supported on ufw, iptables. You must notify this action at the end of the chef run if you want permanent firewalld rules (they are not persistent by default).
+- `:save`: Ensure all rules are added permanently under firewalld using `--permanent`. Not supported on iptables. You must notify this action at the end of the chef run if you want permanent firewalld rules (they are not persistent by default).
 
 #### Parameters
 
 - `disabled` (default to `false`): If set to true, all actions will no-op on this resource. This is a way to prevent included cookbooks from configuring a firewall.
 - `ipv6_enabled` (default to `true`): If set to false, firewall will not perform any ipv6 related work. Currently only supported in iptables.
-- `log_level`: UFW only. Level of verbosity the firewall should log at. valid values are: :low, :medium, :high, :full, :off. default is :low.
 - `rules`: This is used internally for firewall_rule resources to append their rules. You should NOT touch this value unless you plan to supply an entire firewall ruleset at once, and skip using firewall_rule resources.
 - `disabled_zone` (firewalld only): The zone to set on firewalld when the firewall should be disabled. Can be any string in symbol form, e.g. :public, :drop, etc. Defaults to `:public.`
 - `enabled_zone` (firewalld only): The zone to set on firewalld when the firewall should be enabled. Can be any string in symbol form, e.g. :public, :drop, etc. Defaults to `:drop.`
@@ -180,7 +170,7 @@ end
 #### Parameters
 
 - `firewall_name`: the matching firewall resource that this rule applies to. Default value: `default`
-- `raw`: Used to pass an entire rule as a string, omitting all other parameters. This line will be directly loaded by `iptables-restore`, fed directly into `ufw` on the command line, or run using `firewall-cmd`.
+- `raw`: Used to pass an entire rule as a string, omitting all other parameters. This line will be directly loaded by `iptables-restore`, or run using `firewall-cmd`.
 - `description` (*default: same as rule name*): Used to provide a comment that will be included when adding the firewall rule.
 - `include_comment` (*default: true*): Used to optionally exclude the comment in the rule.
 - `position` (*default: 50*): **relative** position to insert rule at. Position may be any integer between 0 < n < 100 (exclusive), and more than one rule may specify the same position.
@@ -192,8 +182,7 @@ end
    - `:redirect`: Redirect the matching packets
    - `:log`: Configure logging
 - `stateful`: a symbol or array of symbols, such as ``[:related, :established]` that will be passed to the state module in iptables or firewalld.
-- `protocol`: `:tcp` (*default*), `:udp`, `:icmp`, `:none` or protocol number. Using protocol numbers is not supported using the ufw provider (default for debian/ubuntu systems).
-- `direction`: For ufw, direction of the rule. valid values are: `:in` (*default*), `:out`, `:pre`, `:post`.
+- `protocol`: `:tcp` (*default*), `:udp`, `:icmp`, `:none` or protocol number.
 - `source` (*Default is `0.0.0.0/0` or `Anywhere`*): source ip address or subnet to filter.
 - `source_port` (*Default is nil*): source port for filtering packets.
 - `destination`: ip address or subnet to filter on packet destination, must be a valid IP
@@ -202,7 +191,6 @@ end
 - `interface`: (source) interface to apply rule (ie. `eth0`).
 - `dest_interface`: interface where packets may be destined to go
 - `redirect_port`: redirected port for rules with command `:redirect`
-- `logging`: may be added to enable logging for a particular rule. valid values are: `:connections`, `:packets`. In the ufw provider, `:connections` logs new connections while `:packets` logs all packets.
 
 ```ruby
 # open standard ssh port
@@ -241,7 +229,7 @@ firewall_rule 'vrrp' do
   command      :allow
 end
 
-# can use :raw command with UFW provider for VRRP
+# can use :raw command for VRRP
 firewall_rule "VRRP" do
   command   :allow
   raw "allow to 224.0.0.18"
