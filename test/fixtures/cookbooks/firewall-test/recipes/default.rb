@@ -24,7 +24,6 @@ end
 firewall_rule 'addremove' do
   port 1236
   command :allow
-  only_if { rhel? || amazon_linux? || node['firewall']['ubuntu_iptables'] } # don't do this on ufw, will reset ufw on every converge
 end
 
 firewall_rule 'addremove2' do
@@ -35,7 +34,6 @@ end
 firewall_rule 'protocolnum' do
   protocol 112
   command :allow
-  only_if { rhel? || amazon_linux? || node['firewall']['ubuntu_iptables'] } # debian ufw doesn't support protocol numbers
 end
 
 firewall_rule 'prepend' do
@@ -74,12 +72,6 @@ firewall_rule 'array' do
   not_if { rhel? && node['platform_version'].to_f < 6.0 }
 end
 
-# if using with iptables-restart, this produces an unreadable line; no problem, IF disabled
-firewall_rule 'ufw raw test' do
-  raw 'limit 23/tcp'
-  only_if { platform_family?('debian') && !node['firewall']['ubuntu_iptables'] }
-end
-
 firewall_rule 'RPC Port Range In' do
   port 5000..5100
   protocol :tcp
@@ -106,5 +98,3 @@ firewall_rule 'port2433' do
   direction :in
   command   :allow
 end
-
-include_recipe 'firewall-test::windows' if windows?

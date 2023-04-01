@@ -16,8 +16,6 @@ class Chef
                          callbacks: { 'must be either :tcp, :udp, :icmp, :\'ipv6-icmp\', :icmpv6, :none, or a valid IP protocol number' => lambda do |p|
                            !!(p.to_s =~ /(udp|tcp|icmp|icmpv6|ipv6-icmp|esp|ah|ipv6|none)/ || (p.to_s =~ /^\d+$/ && p.between?(0, 142)))
                          end })
-    attribute(:direction, kind_of: Symbol, equal_to: [:in, :out, :pre, :post], default: :in)
-    attribute(:logging, kind_of: Symbol, equal_to: [:connections, :packets])
 
     attribute(:source, kind_of: String, callbacks: { 'must be a valid ip address' => ->(ip) { !!IPAddr.new(ip) } })
     attribute(:source_port, kind_of: [Integer, Array, Range]) # source port
@@ -36,10 +34,6 @@ class Chef
 
     # only used for firewalld
     attribute(:permanent, kind_of: [TrueClass, FalseClass], default: false)
-
-    # only used for Windows Firewalls
-    attribute(:program, kind_of: String)
-    attribute(:service, kind_of: String)
 
     # for when you just want to pass a raw rule
     attribute(:raw, kind_of: String)

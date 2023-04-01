@@ -23,7 +23,7 @@ firewall 'default' do
 end
 
 # create a variable to use as a condition on some rules that follow
-iptables_firewall = rhel? || amazon_linux? || node['firewall']['ubuntu_iptables']
+iptables_firewall = rhel? || amazon_linux? || ubuntu?
 
 firewall_rule 'allow loopback' do
   interface 'lo'
@@ -35,8 +35,6 @@ end
 firewall_rule 'allow icmp' do
   protocol :icmp
   command :allow
-  # debian ufw doesn't allow 'icmp' protocol, but does open
-  # icmp by default, so we skip it in default recipe
   only_if { iptables_firewall && node['firewall']['allow_icmp'] }
 end
 
@@ -46,12 +44,6 @@ firewall_rule 'allow world to ssh' do
   only_if { linux? && node['firewall']['allow_ssh'] }
 end
 
-firewall_rule 'allow world to winrm' do
-  port 5989
-  source '0.0.0.0/0'
-  only_if { windows? && node['firewall']['allow_winrm'] }
-end
-
 firewall_rule 'allow world to mosh' do
   protocol :udp
   port 60000..61000
@@ -59,7 +51,7 @@ firewall_rule 'allow world to mosh' do
   only_if { linux? && node['firewall']['allow_mosh'] }
 end
 
-# allow established connections, ufw defaults to this but iptables does not
+# allow established connections, iptabled defaults to deny
 firewall_rule 'established' do
   stateful [:related, :established]
   protocol :none # explicitly don't specify protocol
@@ -68,7 +60,7 @@ firewall_rule 'established' do
 end
 
 # ipv6 needs ICMP to reliably work, so ensure it's enabled if ipv6
-# allow established connections, ufw defaults to this but iptables does not
+# allow established connections, iptables defaults to deny
 firewall_rule 'ipv6_icmp' do
   protocol :'ipv6-icmp'
   command :allow

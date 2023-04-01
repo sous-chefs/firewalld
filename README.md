@@ -18,38 +18,29 @@ This cookbook is maintained by the Sous Chefs. The Sous Chefs are a community of
 
 - Chef Infra Client 15.5+
 
-```
+```ruby
 depends 'firewall'
 ```
 
 ### Supported firewalls and platforms
 
-- UFW - Ubuntu, Debian (except 9)
 - IPTables - Red Hat & CentOS, Ubuntu
 - FirewallD - Red Hat & CentOS >= 7.0 (IPv4 only support, [needs contributions/testing](https://github.com/chef-cookbooks/firewall/issues/86))
-- Windows Advanced Firewall - 2012 R2
 - nftables
 
 Tested on:
 
-- Ubuntu 16.04 with iptables, ufw
+- Ubuntu 16.04 with iptables
 - Debian 9 with iptables
 - Debian 11 with nftables
 - Debian 11 with new resources for firewalld
 - CentOS 6 with iptables
 - CentOS 7.1 with firewalld
 - Oracle 8 with nftables
-- Windows Server 2012r2 with Windows Advanced Firewall
-
-By default, Ubuntu chooses ufw. To switch to iptables, set this in an attribute file:
-
-```
-default['firewall']['ubuntu_iptables'] = true
-```
 
 By default, Red Hat & CentOS >= 7.0 chooses firewalld. To switch to iptables, set this in an attribute file:
 
-```
+```ruby
 default['firewall']['redhat7_iptables'] = true
 ```
 
@@ -73,7 +64,7 @@ The same points hold for the `nftables`- and `nftables_rule`-resources.
 
 If you need to use a table other than `*filter`, the best way to do so is like so:
 
-```
+```ruby
 node.default['firewall']['iptables']['defaults'][:ruleset] = {
   '*filter' => 1,
   ':INPUT DROP' => 2,
@@ -92,7 +83,7 @@ Note -- in order to support multiple hash keys containing the same rule, anythin
 
 Then it's trivial to add additional rules to the `*nat` table using the raw parameter:
 
-```
+```ruby
 firewall_rule "postroute" do
   raw "-A POSTROUTING -o eth1 -p tcp -d 172.28.128.21 -j SNAT --to-source 172.28.128.6"
   position 150
@@ -122,14 +113,10 @@ Used to disable platform specific firewall. Many clouds have their own firewall 
 
 - `default['firewall']['allow_ssh'] = false`, set true to open port 22 for SSH when the default recipe runs
 - `default['firewall']['allow_mosh'] = false`, set to true to open UDP ports 60000 - 61000 for [Mosh][0] when the default recipe runs
-- `default['firewall']['allow_winrm'] = false`, set true to open port 5989 for WinRM when the default recipe runs
 - `default['firewall']['allow_loopback'] = false`, set to true to allow all traffic on the loopback interface
-- `default['firewall']['allow_icmp'] = false`, set true to allow icmp protocol on supported OSes (note: ufw and windows implementations don't support this)
-- `default['firewall']['ubuntu_iptables'] = false`, set to true to use iptables on Ubuntu / Debian when using the default recipe
+- `default['firewall']['allow_icmp'] = false`, set true to allow icmp protocol on supported OSes
 - `default['firewall']['redhat7_iptables'] = false`, set to true to use iptables on Red Hat / CentOS 7 when using the default recipe
-- `default['firewall']['ufw']['defaults']` hash for template `/etc/default/ufw`
 - `default['firewall']['iptables']['defaults']` hash for default policies for 'filter' table's chains`
-- `default['firewall']['windows']['defaults']` hash to define inbound / outbound firewall policy on Windows platform
 - `default['firewall']['allow_established'] = true`, set to false if you don't want a related/established default rule on iptables
 - `default['firewall']['ipv6_enabled'] = true`, set to false if you don't want IPv6 related/established default rule on iptables (this enables ICMPv6, which is required for much of IPv6 communication)
 - `default['firewall']['firewalld']['permanent'] = false`, set to true if you want firewalld rules to be added with `--permanent` so they survive a reboot. This will be changed to `true` by default in a future major version release.
@@ -147,13 +134,12 @@ There is a separate folder for [`firewalld` resources](documentation/README.md).
 - `:install` (*default action*): Install and Enable the firewall. This will ensure the appropriate packages are installed and that any services have been started.
 - `:disable`: Disable the firewall. Drop any rules and put the node in an unprotected state. Flush all current rules. Also erase any internal state used to detect when rules should be applied.
 - `:flush`: Flush all current rules. Also erase any internal state used to detect when rules should be applied.
-- `:save`: Ensure all rules are added permanently under firewalld using `--permanent`. Not supported on ufw, iptables. You must notify this action at the end of the chef run if you want permanent firewalld rules (they are not persistent by default).
+- `:save`: Ensure all rules are added permanently under firewalld using `--permanent`. Not supported on iptables. You must notify this action at the end of the chef run if you want permanent firewalld rules (they are not persistent by default).
 
 #### Parameters
 
 - `disabled` (default to `false`): If set to true, all actions will no-op on this resource. This is a way to prevent included cookbooks from configuring a firewall.
 - `ipv6_enabled` (default to `true`): If set to false, firewall will not perform any ipv6 related work. Currently only supported in iptables.
-- `log_level`: UFW only. Level of verbosity the firewall should log at. valid values are: :low, :medium, :high, :full, :off. default is :low.
 - `rules`: This is used internally for firewall_rule resources to append their rules. You should NOT touch this value unless you plan to supply an entire firewall ruleset at once, and skip using firewall_rule resources.
 - `disabled_zone` (firewalld only): The zone to set on firewalld when the firewall should be disabled. Can be any string in symbol form, e.g. :public, :drop, etc. Defaults to `:public.`
 - `enabled_zone` (firewalld only): The zone to set on firewalld when the firewall should be enabled. Can be any string in symbol form, e.g. :public, :drop, etc. Defaults to `:drop.`
@@ -179,34 +165,32 @@ end
 
 #### Actions
 
-- `:create` (_default action_): If a firewall_rule runs this action, the rule will be recorded in a chef resource's internal state, and applied when providers automatically notify the firewall resource with action `:reload`. The notification happens automatically.
+- `:create` (*default action*): If a firewall_rule runs this action, the rule will be recorded in a chef resource's internal state, and applied when providers automatically notify the firewall resource with action `:reload`. The notification happens automatically.
 
 #### Parameters
 
 - `firewall_name`: the matching firewall resource that this rule applies to. Default value: `default`
-- `raw`: Used to pass an entire rule as a string, omitting all other parameters. This line will be directly loaded by `iptables-restore`, fed directly into `ufw` on the command line, or run using `firewall-cmd`.
-- `description` (_default: same as rule name_): Used to provide a comment that will be included when adding the firewall rule.
-- `include_comment` (_default: true_): Used to optionally exclude the comment in the rule.
-- `position` (_default: 50_): **relative** position to insert rule at. Position may be any integer between 0 < n < 100 (exclusive), and more than one rule may specify the same position.
+- `raw`: Used to pass an entire rule as a string, omitting all other parameters. This line will be directly loaded by `iptables-restore`, or run using `firewall-cmd`.
+- `description` (*default: same as rule name*): Used to provide a comment that will be included when adding the firewall rule.
+- `include_comment` (*default: true*): Used to optionally exclude the comment in the rule.
+- `position` (*default: 50*): **relative** position to insert rule at. Position may be any integer between 0 < n < 100 (exclusive), and more than one rule may specify the same position.
 - `command`: What action to take on a particular packet
-   - `:allow` (_default action_): the rule should allow matching packets
+   - `:allow` (*default action*): the rule should allow matching packets
    - `:deny`: the rule should deny matching packets
    - `:reject`: the rule should reject matching packets
    - `:masqerade`: Masquerade the matching packets
    - `:redirect`: Redirect the matching packets
    - `:log`: Configure logging
 - `stateful`: a symbol or array of symbols, such as ``[:related, :established]` that will be passed to the state module in iptables or firewalld.
-- `protocol`: `:tcp` (_default_), `:udp`, `:icmp`, `:none` or protocol number. Using protocol numbers is not supported using the ufw provider (default for debian/ubuntu systems).
-- `direction`: For ufw, direction of the rule. valid values are: `:in` (_default_), `:out`, `:pre`, `:post`.
-- `source` (_Default is `0.0.0.0/0` or `Anywhere`_): source ip address or subnet to filter.
-- `source_port` (_Default is nil_): source port for filtering packets.
+- `protocol`: `:tcp` (*default*), `:udp`, `:icmp`, `:none` or protocol number.
+- `source` (*Default is `0.0.0.0/0` or `Anywhere`*): source ip address or subnet to filter.
+- `source_port` (*Default is nil*): source port for filtering packets.
 - `destination`: ip address or subnet to filter on packet destination, must be a valid IP
 - `port` or `dest_port`: target port number (ie. 22 to allow inbound SSH), or an array of incoming port numbers (ie. [80,443] to allow inbound HTTP & HTTPS).
   NOTE: `protocol` attribute is required with multiple ports, or a range of incoming port numbers (ie. 60000..61000 to allow inbound mobile-shell. NOTE: `protocol`, or an attribute is required with a range of ports.
 - `interface`: (source) interface to apply rule (ie. `eth0`).
 - `dest_interface`: interface where packets may be destined to go
 - `redirect_port`: redirected port for rules with command `:redirect`
-- `logging`: may be added to enable logging for a particular rule. valid values are: `:connections`, `:packets`. In the ufw provider, `:connections` logs new connections while `:packets` logs all packets.
 
 ```ruby
 # open standard ssh port
@@ -245,13 +229,13 @@ firewall_rule 'vrrp' do
   command      :allow
 end
 
-# can use :raw command with UFW provider for VRRP
+# can use :raw command for VRRP
 firewall_rule "VRRP" do
   command   :allow
   raw "allow to 224.0.0.18"
 end
 
-# open UDP ports 60000..61000 for mobile shell (mosh.mit.edu), note
+# open UDP ports 60000..61000 for mobile shell (mosh.org), note
 # that the protocol attribute is required when using port_range
 firewall_rule 'mosh' do
   protocol   :udp
@@ -283,7 +267,7 @@ Different providers will determine the current state of the rules differently --
 
 To figure out what the position values are for current rules, print the hash that contains the weights:
 
-```
+```ruby
 require pp
 default_firewall = resources(:firewall, 'default')
 pp default_firewall.rules
@@ -346,4 +330,4 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 ![https://opencollective.com/sous-chefs/sponsor/8/website](https://opencollective.com/sous-chefs/sponsor/8/avatar.svg?avatarHeight=100)
 ![https://opencollective.com/sous-chefs/sponsor/9/website](https://opencollective.com/sous-chefs/sponsor/9/avatar.svg?avatarHeight=100)
 
-[0]: https://mosh.mit.edu/
+[0]: https://mosh.org
