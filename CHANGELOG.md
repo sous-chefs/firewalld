@@ -4,6 +4,8 @@ This file is used to list changes made in each version of the firewall cookbook.
 
 ## Unreleased
 
+Fix documentation to pass markdown lint
+
 ## 6.2.7 - *2023-03-02*
 
 ## 6.2.6 - *2023-02-23*
@@ -362,7 +364,7 @@ Minor bugfix release.
 
 ### Bug
 
-- **[COOK-3615](https://tickets.opscode.com/browse/COOK-3615)** - Install required UFW package on Debian
+- [COOK-3615]: Install required UFW package on Debian
 
 ## v0.11.0
 
