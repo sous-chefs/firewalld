@@ -106,5 +106,3 @@ firewall_rule 'port2433' do
   direction :in
   command   :allow
 end
-
-include_recipe 'firewall-test::windows' if windows?

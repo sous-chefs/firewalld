@@ -19,7 +19,3 @@ describe service('ufw') do
     its(:stdout) { should match(/Status: active/) }
   end
 end if os.debian?
-
-describe command('netsh advfirewall show currentprofile firewallpolicy | findstr "Firewall Policy"') do
-  its(:stdout) { should match('BlockInbound,AllowOutbound') }
-end if os.windows?

@@ -27,7 +27,6 @@ depends 'firewall'
 - UFW - Ubuntu, Debian (except 9)
 - IPTables - Red Hat & CentOS, Ubuntu
 - FirewallD - Red Hat & CentOS >= 7.0 (IPv4 only support, [needs contributions/testing](https://github.com/chef-cookbooks/firewall/issues/86))
-- Windows Advanced Firewall - 2012 R2
 - nftables
 
 Tested on:
@@ -39,7 +38,6 @@ Tested on:
 - CentOS 6 with iptables
 - CentOS 7.1 with firewalld
 - Oracle 8 with nftables
-- Windows Server 2012r2 with Windows Advanced Firewall
 
 By default, Ubuntu chooses ufw. To switch to iptables, set this in an attribute file:
 
@@ -122,14 +120,12 @@ Used to disable platform specific firewall. Many clouds have their own firewall 
 
 - `default['firewall']['allow_ssh'] = false`, set true to open port 22 for SSH when the default recipe runs
 - `default['firewall']['allow_mosh'] = false`, set to true to open UDP ports 60000 - 61000 for [Mosh][0] when the default recipe runs
-- `default['firewall']['allow_winrm'] = false`, set true to open port 5989 for WinRM when the default recipe runs
 - `default['firewall']['allow_loopback'] = false`, set to true to allow all traffic on the loopback interface
-- `default['firewall']['allow_icmp'] = false`, set true to allow icmp protocol on supported OSes (note: ufw and windows implementations don't support this)
+- `default['firewall']['allow_icmp'] = false`, set true to allow icmp protocol on supported OSes (note: ufw implementation doesn't support this)
 - `default['firewall']['ubuntu_iptables'] = false`, set to true to use iptables on Ubuntu / Debian when using the default recipe
 - `default['firewall']['redhat7_iptables'] = false`, set to true to use iptables on Red Hat / CentOS 7 when using the default recipe
 - `default['firewall']['ufw']['defaults']` hash for template `/etc/default/ufw`
 - `default['firewall']['iptables']['defaults']` hash for default policies for 'filter' table's chains`
-- `default['firewall']['windows']['defaults']` hash to define inbound / outbound firewall policy on Windows platform
 - `default['firewall']['allow_established'] = true`, set to false if you don't want a related/established default rule on iptables
 - `default['firewall']['ipv6_enabled'] = true`, set to false if you don't want IPv6 related/established default rule on iptables (this enables ICMPv6, which is required for much of IPv6 communication)
 - `default['firewall']['firewalld']['permanent'] = false`, set to true if you want firewalld rules to be added with `--permanent` so they survive a reboot. This will be changed to `true` by default in a future major version release.
