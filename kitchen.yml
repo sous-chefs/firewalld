@@ -3,6 +3,7 @@ driver:
 
 provisioner:
   name: chef_infra
+  policyfile: Policyfile.rb
   product_name: chef
   product_version: <%= ENV['CHEF_VERSION'] %>
   deprecations_as_errors: true
@@ -45,9 +46,8 @@ platforms:
 
 suites:
   - name: default
-    run_list:
-      - recipe[firewall::default]
-      - recipe[firewall-test::default]
+    provisioner:
+      named_run_list: default
 
   - name: firewalld
     excludes:
@@ -60,9 +60,8 @@ suites:
       - ubuntu-20.04
       - windows-2016
       - windows-2019
-    run_list:
-      - recipe[firewall::default]
-      - recipe[firewall-test::default]
+    provisioner:
+      named_run_list: firewalld
 
   - name: ufw
     excludes:
@@ -77,9 +76,8 @@ suites:
       - oracle-8
       - windows-2016
       - windows-2019
-    run_list:
-      - recipe[firewall::default]
-      - recipe[firewall-test::default]
+    provisioner:
+      named_run_list: ufw
 
   - name: iptables
     excludes:
@@ -90,9 +88,8 @@ suites:
       - ubuntu-20.04
       - windows-2016
       - windows-2019
-    run_list:
-      - recipe[firewall::default]
-      - recipe[firewall-test::default]
+    provisioner:
+      named_run_list: iptables
     attributes:
       firewall:
         ubuntu_iptables: true
@@ -102,20 +99,19 @@ suites:
     includes:
       - debian-11
       - oracle-8
-    run_list:
-      - recipe[nftables-test]
+    provisioner:
+      named_run_list: nftables
 
   - name: firewalld-dbus
     includes:
       - debian-11
       - fedora-34
-    run_list:
-      - recipe[firewalld-test]
+    provisioner:
+      named_run_list: firewalld_dbus
 
   - name: windows
     includes:
       - windows-2016
       - windows-2019
-    run_list:
-      - recipe[firewall::default]
-      - recipe[firewall-test::default]
+    provisioner:
+      named_run_list: windows

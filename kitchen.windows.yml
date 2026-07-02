@@ -10,6 +10,7 @@ transport:
 
 provisioner:
   name: chef_zero
+  policyfile: Policyfile.rb
   enforce_idempotency: true
   multiple_converge: 2
   deprecations_as_errors: true
