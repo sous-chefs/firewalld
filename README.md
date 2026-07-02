@@ -32,14 +32,13 @@ depends 'firewall'
 
 Tested on:
 
-- Ubuntu 16.04 with iptables, ufw
-- Debian 9 with iptables
-- Debian 11 with nftables
-- Debian 11 with new resources for firewalld
-- CentOS 6 with iptables
-- CentOS 7.1 with firewalld
-- Oracle 8 with nftables
-- Windows Server 2012r2 with Windows Advanced Firewall
+- AlmaLinux 8 and 9 with iptables
+- Amazon Linux 2023 with firewalld and iptables
+- CentOS Stream 9 with iptables
+- Debian 11, 12, and 13 with ufw, nftables, and the firewalld D-Bus resources
+- Fedora latest with the firewalld D-Bus resources
+- Ubuntu 22.04 and 24.04 with ufw
+- Windows latest with Windows Advanced Firewall
 
 By default, Ubuntu chooses ufw. To switch to iptables, set this in an attribute file:
 

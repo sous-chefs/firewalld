@@ -17,31 +17,31 @@ jobs:
 
   integration:
     needs: lint-unit
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          - os: amazonlinux-2
+          - os: amazonlinux-2023
             suite: firewalld
-          - os: amazonlinux-2
+          - os: amazonlinux-2023
             suite: iptables
-          - os: centos-7
-            suite: firewalld
-          - os: centos-7
+          - os: almalinux-8
             suite: iptables
-          - os: centos-stream-8
+          - os: almalinux-9
             suite: iptables
-          - os: debian-9
+          - os: centos-stream-9
+            suite: iptables
+          - os: debian-11
             suite: ufw
-          - os: debian-10
+          - os: debian-12
             suite: ufw
           - os: debian-11
             suite: firewalld-dbus
           - os: debian-11
             suite: nftables
-          - os: ubuntu-1804
+          - os: ubuntu-2204
             suite: ufw
-          - os: ubuntu-2004
+          - os: ubuntu-2404
             suite: ufw
       fail-fast: false
     steps:
@@ -52,9 +52,7 @@ jobs:
       - name: Install Policyfile
         run: chef install Policyfile.rb
       - name: kitchen
-        uses: actionshub/test-kitchen@3.0.0
         env:
           CHEF_LICENSE: accept-no-persist
-        with:
-          suite: ${{ matrix.suite }}
-          os: ${{ matrix.os }}
+          KITCHEN_LOCAL_YAML: kitchen.dokken.yml
+        run: kitchen test "${{ matrix.suite }}-${{ matrix.os }}"
