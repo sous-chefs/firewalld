@@ -4,6 +4,10 @@ end
 
 firewalld 'default'
 
+service 'firewalld' do
+  action [:enable, :start]
+end
+
 firewalld_config 'set some values' do
   default_zone 'home'
   log_denied 'all'
