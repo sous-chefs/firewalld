@@ -1,4 +1,13 @@
 config:
   ul-indent: false  # MD007
   line-length: false  # MD013
-  no-duplicate-heading/no-duplicate-header: false  # MD024
+  no-duplicate-heading: false  # MD024
+  reference-links-images: false  # MD052
+  no-multiple-blanks:
+    maximum: 2
+ignores:
+  # Generated resource documentation contains long Chef property tables that
+  # churn heavily under strict table alignment. Keep maintained docs linted.
+  - documentation/resources/**
+  - .github/copilot-instructions.md
+  - .windsurf/**
