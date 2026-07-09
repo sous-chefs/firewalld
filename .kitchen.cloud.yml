@@ -8,4 +8,5 @@ driver_config:
 
 provisioner:
   name: chef_zero
+  policyfile: Policyfile.rb
   require_chef_omnibus: latest

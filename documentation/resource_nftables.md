@@ -28,7 +28,7 @@ the following resource results in the following nftables ruleset:
 nftables 'default'
 ```
 
-```
+```text
 table inet filter {
         chain INPUT {
                 type filter hook input priority filter; policy accept;
@@ -56,7 +56,7 @@ end
 
 This will result in the following ruleset:
 
-```
+```text
 table inet filter {
         chain INPUT {
                 type filter hook input priority filter; policy accept;

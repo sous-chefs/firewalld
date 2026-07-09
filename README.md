@@ -18,7 +18,7 @@ This cookbook is maintained by the Sous Chefs. The Sous Chefs are a community of
 
 - Chef Infra Client 15.5+
 
-```
+```ruby
 depends 'firewall'
 ```
 
@@ -32,24 +32,23 @@ depends 'firewall'
 
 Tested on:
 
-- Ubuntu 16.04 with iptables, ufw
-- Debian 9 with iptables
-- Debian 11 with nftables
-- Debian 11 with new resources for firewalld
-- CentOS 6 with iptables
-- CentOS 7.1 with firewalld
-- Oracle 8 with nftables
-- Windows Server 2012r2 with Windows Advanced Firewall
+- AlmaLinux 8 and 9 with iptables
+- Amazon Linux 2023 with firewalld and iptables
+- CentOS Stream 9 with iptables
+- Debian 11, 12, and 13 with ufw, nftables, and the firewalld D-Bus resources
+- Fedora latest with the firewalld D-Bus resources
+- Ubuntu 22.04 and 24.04 with ufw
+- Windows latest with Windows Advanced Firewall
 
 By default, Ubuntu chooses ufw. To switch to iptables, set this in an attribute file:
 
-```
+```ruby
 default['firewall']['ubuntu_iptables'] = true
 ```
 
 By default, Red Hat & CentOS >= 7.0 chooses firewalld. To switch to iptables, set this in an attribute file:
 
-```
+```ruby
 default['firewall']['redhat7_iptables'] = true
 ```
 
@@ -73,7 +72,7 @@ The same points hold for the `nftables`- and `nftables_rule`-resources.
 
 If you need to use a table other than `*filter`, the best way to do so is like so:
 
-```
+```ruby
 node.default['firewall']['iptables']['defaults'][:ruleset] = {
   '*filter' => 1,
   ':INPUT DROP' => 2,
@@ -92,7 +91,7 @@ Note -- in order to support multiple hash keys containing the same rule, anythin
 
 Then it's trivial to add additional rules to the `*nat` table using the raw parameter:
 
-```
+```ruby
 firewall_rule "postroute" do
   raw "-A POSTROUTING -o eth1 -p tcp -d 172.28.128.21 -j SNAT --to-source 172.28.128.6"
   position 150
@@ -179,27 +178,27 @@ end
 
 #### Actions
 
-- `:create` (_default action_): If a firewall_rule runs this action, the rule will be recorded in a chef resource's internal state, and applied when providers automatically notify the firewall resource with action `:reload`. The notification happens automatically.
+- `:create` (*default action*): If a firewall_rule runs this action, the rule will be recorded in a chef resource's internal state, and applied when providers automatically notify the firewall resource with action `:reload`. The notification happens automatically.
 
 #### Parameters
 
 - `firewall_name`: the matching firewall resource that this rule applies to. Default value: `default`
 - `raw`: Used to pass an entire rule as a string, omitting all other parameters. This line will be directly loaded by `iptables-restore`, fed directly into `ufw` on the command line, or run using `firewall-cmd`.
-- `description` (_default: same as rule name_): Used to provide a comment that will be included when adding the firewall rule.
-- `include_comment` (_default: true_): Used to optionally exclude the comment in the rule.
-- `position` (_default: 50_): **relative** position to insert rule at. Position may be any integer between 0 < n < 100 (exclusive), and more than one rule may specify the same position.
+- `description` (*default: same as rule name*): Used to provide a comment that will be included when adding the firewall rule.
+- `include_comment` (*default: true*): Used to optionally exclude the comment in the rule.
+- `position` (*default: 50*): **relative** position to insert rule at. Position may be any integer between 0 < n < 100 (exclusive), and more than one rule may specify the same position.
 - `command`: What action to take on a particular packet
-   - `:allow` (_default action_): the rule should allow matching packets
+   - `:allow` (*default action*): the rule should allow matching packets
    - `:deny`: the rule should deny matching packets
    - `:reject`: the rule should reject matching packets
    - `:masqerade`: Masquerade the matching packets
    - `:redirect`: Redirect the matching packets
    - `:log`: Configure logging
 - `stateful`: a symbol or array of symbols, such as ``[:related, :established]` that will be passed to the state module in iptables or firewalld.
-- `protocol`: `:tcp` (_default_), `:udp`, `:icmp`, `:none` or protocol number. Using protocol numbers is not supported using the ufw provider (default for debian/ubuntu systems).
-- `direction`: For ufw, direction of the rule. valid values are: `:in` (_default_), `:out`, `:pre`, `:post`.
-- `source` (_Default is `0.0.0.0/0` or `Anywhere`_): source ip address or subnet to filter.
-- `source_port` (_Default is nil_): source port for filtering packets.
+- `protocol`: `:tcp` (*default*), `:udp`, `:icmp`, `:none` or protocol number. Using protocol numbers is not supported using the ufw provider (default for debian/ubuntu systems).
+- `direction`: For ufw, direction of the rule. valid values are: `:in` (*default*), `:out`, `:pre`, `:post`.
+- `source` (*Default is `0.0.0.0/0` or `Anywhere`*): source ip address or subnet to filter.
+- `source_port` (*Default is nil*): source port for filtering packets.
 - `destination`: ip address or subnet to filter on packet destination, must be a valid IP
 - `port` or `dest_port`: target port number (ie. 22 to allow inbound SSH), or an array of incoming port numbers (ie. [80,443] to allow inbound HTTP & HTTPS).
   NOTE: `protocol` attribute is required with multiple ports, or a range of incoming port numbers (ie. 60000..61000 to allow inbound mobile-shell. NOTE: `protocol`, or an attribute is required with a range of ports.
@@ -283,7 +282,7 @@ Different providers will determine the current state of the rules differently --
 
 To figure out what the position values are for current rules, print the hash that contains the weights:
 
-```
+```ruby
 require pp
 default_firewall = resources(:firewall, 'default')
 pp default_firewall.rules

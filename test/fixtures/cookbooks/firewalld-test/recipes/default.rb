@@ -4,6 +4,10 @@ end
 
 firewalld 'default'
 
+service 'firewalld' do
+  action [:enable, :start]
+end
+
 firewalld_config 'set some values' do
   default_zone 'home'
   log_denied 'all'
@@ -50,12 +54,12 @@ firewalld_ipset 'example-ips' do
   description 'some ips as an example ipset'
   type 'hash:ip'
   options({
-    'family' => 'inet',
-    # timeout is not applicable for permanent configuration
-    # 'timeout' => '12',
-    'hashsize' => '1000',
-    'maxelem' => '255',
-  })
+            'family' => 'inet',
+            # timeout is not applicable for permanent configuration
+            # 'timeout' => '12',
+            'hashsize' => '1000',
+            'maxelem' => '255',
+          })
   entries ['192.0.2.16', '192.0.2.32']
 end
 

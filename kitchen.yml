@@ -3,6 +3,7 @@ driver:
 
 provisioner:
   name: chef_infra
+  policyfile: Policyfile.rb
   product_name: chef
   product_version: <%= ENV['CHEF_VERSION'] %>
   deprecations_as_errors: true
@@ -22,77 +23,46 @@ verifier:
 
 platforms:
   - name: almalinux-8
-  - name: amazonlinux-2
-  - name: centos-7
-  - name: centos-stream-8
-  - name: debian-9
-  - name: debian-10
+  - name: almalinux-9
+  - name: amazonlinux-2023
+  - name: centos-stream-9
   - name: debian-11
-  - name: fedora-34
+  - name: debian-12
+  - name: debian-13
   - name: fedora-latest
-  - name: freebsd-11
-  - name: freebsd-12
-  - name: opensuse-leap-15
-  - name: oracle-8
-  - name: ubuntu-18.04
-  - name: ubuntu-20.04
-  - name: windows-2016
-    driver_config:
-      box: tas50/windows_2016
-  - name: windows-2019
-    driver_config:
-      box: tas50/windows_2019
+  - name: ubuntu-22.04
+  - name: ubuntu-24.04
 
 suites:
   - name: default
-    run_list:
-      - recipe[firewall::default]
-      - recipe[firewall-test::default]
+    provisioner:
+      named_run_list: default
 
   - name: firewalld
-    excludes:
-      - almalinux-8
-      - centos-8
-      - debian-9
-      - debian-10
-      - oracle-8
-      - ubuntu-18.04
-      - ubuntu-20.04
-      - windows-2016
-      - windows-2019
-    run_list:
-      - recipe[firewall::default]
-      - recipe[firewall-test::default]
+    includes:
+      - amazonlinux-2023
+    provisioner:
+      named_run_list: firewalld
 
   - name: ufw
-    excludes:
-      - almalinux-8
-      - amazonlinux-2
-      - centos-7
-      - centos-8
-      - fedora-latest
-      - freebsd-11
-      - freebsd-12
-      - opensuse-leap-15
-      - oracle-8
-      - windows-2016
-      - windows-2019
-    run_list:
-      - recipe[firewall::default]
-      - recipe[firewall-test::default]
+    includes:
+      - debian-11
+      - debian-12
+      - debian-13
+      - ubuntu-22.04
+      - ubuntu-24.04
+    provisioner:
+      named_run_list: ufw
 
   - name: iptables
-    excludes:
-      - debian-9
-      - debian-10
-      - oracle-8
-      - ubuntu-18.04
-      - ubuntu-20.04
-      - windows-2016
-      - windows-2019
-    run_list:
-      - recipe[firewall::default]
-      - recipe[firewall-test::default]
+    includes:
+      - almalinux-8
+      - almalinux-9
+      - amazonlinux-2023
+      - centos-stream-9
+      - fedora-latest
+    provisioner:
+      named_run_list: iptables
     attributes:
       firewall:
         ubuntu_iptables: true
@@ -101,21 +71,22 @@ suites:
   - name: nftables
     includes:
       - debian-11
-      - oracle-8
-    run_list:
-      - recipe[nftables-test]
+      - debian-12
+      - debian-13
+    provisioner:
+      named_run_list: nftables
 
   - name: firewalld-dbus
     includes:
       - debian-11
-      - fedora-34
-    run_list:
-      - recipe[firewalld-test]
+      - debian-12
+      - debian-13
+      - fedora-latest
+    provisioner:
+      named_run_list: firewalld_dbus
 
   - name: windows
     includes:
-      - windows-2016
-      - windows-2019
-    run_list:
-      - recipe[firewall::default]
-      - recipe[firewall-test::default]
+      - windows-latest
+    provisioner:
+      named_run_list: windows
