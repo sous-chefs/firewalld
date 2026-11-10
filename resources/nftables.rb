@@ -42,7 +42,7 @@ action :rebuild do
   ensure_default_rules_exist(new_resource)
 
   file new_resource.nftables_conf_path do
-    content  <<~NFT
+    content <<~NFT
       #!/usr/sbin/nft -f
       flush ruleset
       #{build_rule_file(new_resource.rules)}
