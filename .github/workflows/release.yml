@@ -16,9 +16,10 @@ permissions:
 
 jobs:
   release:
-    uses: sous-chefs/.github/.github/workflows/release-cookbook.yml@9.0.1
+    uses: sous-chefs/.github/.github/workflows/release-cookbook.yml@main
     with:
       publish_oci: true
+      supermarket_publisher: none
     secrets:
       token: ${{ secrets.PORTER_GITHUB_TOKEN }}
       supermarket_user: ${{ secrets.CHEF_SUPERMARKET_USER }}
