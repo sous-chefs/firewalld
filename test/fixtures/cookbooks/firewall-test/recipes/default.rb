@@ -1,4 +1,4 @@
-include_recipe 'firewall'
+include_recipe 'firewalld'
 
 firewall_rule 'ssh22' do
   port 22

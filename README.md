@@ -1,7 +1,11 @@
-# firewall Cookbook
+# firewalld Cookbook
 
-[![Cookbook Version](https://img.shields.io/cookbook/v/firewall.svg)](https://supermarket.chef.io/cookbooks/firewall)
-[![CI State](https://github.com/sous-chefs/firewall/workflows/ci/badge.svg)](https://github.com/sous-chefs/firewall/actions?query=workflow%3Aci)
+This repository provides the `firewalld` cookbook and publishes OCI artifacts to
+GHCR. It is not the unrelated `firewalld` cookbook on Chef Supermarket. It
+originated from the `firewall` cookbook and still provides some of the same
+resources; do not load both cookbooks in the same Chef run.
+
+[![CI State](https://github.com/sous-chefs/firewalld/workflows/ci/badge.svg)](https://github.com/sous-chefs/firewalld/actions?query=workflow%3Aci)
 [![OpenCollective](https://opencollective.com/sous-chefs/backers/badge.svg)](#backers)
 [![OpenCollective](https://opencollective.com/sous-chefs/sponsors/badge.svg)](#sponsors)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -19,8 +23,11 @@ This cookbook is maintained by the Sous Chefs. The Sous Chefs are a community of
 - Chef Infra Client 15.5+
 
 ```ruby
-depends 'firewall'
+depends 'firewalld'
 ```
+
+Configure your dependency manager to obtain `firewalld` from this repository or
+its OCI artifact. Do not resolve it from Chef Supermarket.
 
 ### Supported firewalls and platforms
 
@@ -294,7 +301,7 @@ This section details "quick development" steps. For a detailed explanation, see 
 
 1. Clone this repository from GitHub:
 
-`$ git clone git@github.com:chef-cookbooks/firewall.git`
+`$ git clone git@github.com:sous-chefs/firewalld.git`
 
 1. Create a git branch
 

@@ -44,7 +44,7 @@ class Chef
         group 'root'
         mode '0644'
         source 'ufw/default.erb'
-        cookbook 'firewall'
+        cookbook 'firewalld'
       end
       defaults_ufw.run_action(:create)
       new_resource.updated_by_last_action(true) if defaults_ufw.updated_by_last_action?
