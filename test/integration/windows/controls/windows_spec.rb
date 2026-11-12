@@ -2,6 +2,7 @@
 
 # these tests only for windows
 expected_rules = [
+  /firewall add rule name="HTTP HTTPS" description="HTTP HTTPS" dir=out protocol=tcp localip=any localport=any interfacetype=any remoteip=any remoteport=80,443 action=allow/,
   /firewall add rule name="prepend" description="prepend" dir=in protocol=tcp localip=any localport=7788 interfacetype=any remoteip=any remoteport=any action=allow/,
   /firewall add rule name="block-192.168.99.99" description="block-192.168.99.99" dir=in protocol=tcp localip=any localport=any interfacetype=any remoteip=192.168.99.99 remoteport=any action=block/,
   /firewall add rule name="default winrm" description="allow world to winrm" dir=in protocol=tcp localip=any localport=5989 interfacetype=any remoteip=any remoteport=any action=allow/,

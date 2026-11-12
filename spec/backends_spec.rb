@@ -213,3 +213,25 @@ describe 'Windows firewall rendering' do
     expect(content).to include('localport=443', 'set currentprofile firewallpolicy blockinbound,allowoutbound')
   end
 end
+
+describe 'Windows outbound port shorthand' do
+  platform 'windows', '2019'
+  step_into :firewall_backend_windows
+  recipe do
+    rule = firewall_rule 'https outbound' do
+      direction :out
+      port 443
+      action :nothing
+    end
+    firewall_backend_windows 'default' do
+      windows_output_policy 'blockoutbound'
+      rule_resources [rule]
+      action :restart
+    end
+  end
+  it 'limits the remote port instead of allowing all outbound TCP ports' do
+    content = chef_run.find_resources(:file).last.content
+    expect(content).to include('localport=any', 'remoteport=443', 'blockinbound,blockoutbound')
+    expect(content).not_to include('remoteport=any')
+  end
+end

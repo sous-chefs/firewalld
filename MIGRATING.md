@@ -66,7 +66,8 @@ rules, as before.
   iptables disable/delete flush all tables recorded in its managed configuration
   and reset their built-in chain policies to ACCEPT, so redirects and custom
   table policies do not survive removal. Windows status detection accepts padded
-  `netsh` output and avoids repeated resets.
+  `netsh` output and avoids repeated resets. Outbound Windows rules honour the
+  `port` shorthand for destination ports instead of allowing all remote ports.
 - nftables numeric protocols now generate an explicit protocol condition.
   The forwarding chain is correctly named `FORWARD`; address arrays are rendered
   as sets and mixed IPv4/IPv6 sets are rejected.

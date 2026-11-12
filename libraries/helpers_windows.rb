@@ -67,7 +67,7 @@ module FirewallCookbook
           parameters['localport'] = new_resource.source_port ? port_to_s(new_resource.source_port) : 'any'
           parameters['interfacetype'] = new_resource.interface || 'any'
           parameters['remoteip'] = new_resource.destination ? fixup_cidr(new_resource.destination) : 'any'
-          parameters['remoteport'] = new_resource.dest_port ? port_to_s(new_resource.dest_port) : 'any'
+          parameters['remoteport'] = dport_calc(new_resource) ? port_to_s(dport_calc(new_resource)) : 'any'
         else
           parameters['localip'] = new_resource.destination || 'any'
           parameters['localport'] = dport_calc(new_resource) ? port_to_s(dport_calc(new_resource)) : 'any'
