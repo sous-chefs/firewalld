@@ -41,3 +41,15 @@ end
 describe command('netsh advfirewall show currentprofile firewallpolicy | findstr "Firewall Policy"') do
   its(:stdout) { should match('BlockInbound,AllowOutbound') }
 end
+
+describe command('powershell.exe -NoProfile -Command "(Get-NetFirewallRule -DisplayName protocolnum | Get-NetFirewallPortFilter).Protocol"') do
+  its(:exit_status) { should eq 0 }
+  its(:stdout) { should match(/112/) }
+end
+
+describe command('powershell.exe -NoProfile -Command "(Get-NetFirewallRule -DisplayName \'HTTP HTTPS\' | Get-NetFirewallPortFilter).RemotePort"') do
+  its(:exit_status) { should eq 0 }
+  it 'restricts the outbound rule to the requested ports' do
+    expect(subject.stdout.split).to match_array(%w(80 443))
+  end
+end

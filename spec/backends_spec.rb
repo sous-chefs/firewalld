@@ -235,3 +235,42 @@ describe 'Windows outbound port shorthand' do
     expect(content).not_to include('remoteport=any')
   end
 end
+
+describe 'Windows non-port protocols' do
+  platform 'windows', '2019'
+  step_into :firewall_backend_windows
+  recipe do
+    rule = firewall_rule 'vrrp' do
+      protocol 112
+      action :nothing
+    end
+    firewall_backend_windows 'default' do
+      rule_resources [rule]
+      action :restart
+    end
+  end
+  it 'does not pass TCP or UDP port fields to a numeric protocol' do
+    content = chef_run.find_resources(:file).last.content
+    expect(content).to include('protocol=112')
+    expect(content).not_to include('localport=', 'remoteport=')
+  end
+end
+
+describe 'Windows incompatible protocol ports' do
+  platform 'windows', '2019'
+  step_into :firewall_backend_windows
+  recipe do
+    rule = firewall_rule 'invalid vrrp port' do
+      protocol 112
+      port 443
+      action :nothing
+    end
+    firewall_backend_windows 'default' do
+      rule_resources [rule]
+      action :restart
+    end
+  end
+  it 'rejects the rule before applying any firewall changes' do
+    expect { chef_run }.to raise_error(ArgumentError, /TCP or UDP/)
+  end
+end

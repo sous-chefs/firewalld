@@ -45,7 +45,7 @@ end
 firewall_rule 'protocolnum' do
   protocol 112
   command :allow
-  only_if { rhel? || amazon_linux? || node.dig('firewalld_test', 'backend') == 'iptables' } # debian ufw doesn't support protocol numbers
+  only_if { windows? || rhel? || amazon_linux? || node.dig('firewalld_test', 'backend') == 'iptables' } # debian ufw doesn't support protocol numbers
 end
 
 firewall_rule 'prepend' do

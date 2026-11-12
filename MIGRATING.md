@@ -68,6 +68,9 @@ rules, as before.
   table policies do not survive removal. Windows status detection accepts padded
   `netsh` output and avoids repeated resets. Outbound Windows rules honour the
   `port` shorthand for destination ports instead of allowing all remote ports.
+  Non-TCP/UDP Windows rules omit port fields and reject incompatible explicit
+  port constraints before applying changes. Common protocol aliases are
+  translated to their Windows names or protocol numbers.
 - nftables numeric protocols now generate an explicit protocol condition.
   The forwarding chain is correctly named `FORWARD`; address arrays are rendered
   as sets and mixed IPv4/IPv6 sets are rejected.
