@@ -65,11 +65,10 @@ end
           command [family, '-t', table, '-F']
           only_if { operation == :flush ? ::File.exist?(rules_path(family)) : configured_rules?(family) }
         end
-      end
-      if operation != :flush
-        %w(INPUT OUTPUT FORWARD).each do |chain|
-          execute "allow #{new_resource.name} #{family} #{chain}" do
-            command [family, '-P', chain, 'ACCEPT']
+        next if operation == :flush
+        managed_policies(family).fetch(table, []).each do |chain|
+          execute "allow #{new_resource.name} #{family} #{table} #{chain}" do
+            command [family, '-t', table, '-P', chain, 'ACCEPT']
             only_if { configured_rules?(family) }
           end
         end
@@ -123,5 +122,20 @@ action_class do
   def configured_rules?(family)
     path = rules_path(family)
     ::File.exist?(path) && ::File.read(path) != '# created by chef to allow service to start'
+  end
+
+  def managed_policies(family)
+    policies = { 'filter' => %w(INPUT OUTPUT FORWARD) }
+    path = rules_path(family)
+    return policies unless ::File.exist?(path)
+
+    table = nil
+    ::File.foreach(path) do |line|
+      table = Regexp.last_match(1) if line =~ /^\*(\w+)$/
+      next unless table && line =~ /^:(\S+)\s+(ACCEPT|DROP)\b/
+
+      (policies[table] ||= []) << Regexp.last_match(1)
+    end
+    policies.transform_values(&:uniq)
   end
 end

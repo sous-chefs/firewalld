@@ -1,11 +1,23 @@
 # frozen_string_literal: true
 
 case input('removal_type')
+when 'custom_policy'
+  %w(iptables ip6tables).each do |family|
+    describe command("#{family} -t mangle -S FORWARD") do
+      its('exit_status') { should eq 0 }
+      its('stdout') { should match(/-P FORWARD DROP/) }
+    end
+  end
 when 'disable', 'nat_remove'
   %w(iptables ip6tables).each do |family|
     describe command("#{family} -t nat -S") do
       its('exit_status') { should eq 0 }
       its('stdout') { should_not match(/--dports 5555/) }
+    end
+    next unless input('removal_type') == 'disable'
+    describe command("#{family} -t mangle -S FORWARD") do
+      its('exit_status') { should eq 0 }
+      its('stdout') { should match(/-P FORWARD ACCEPT/) }
     end
   end
 when 'dbus_delete'

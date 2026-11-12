@@ -86,6 +86,25 @@ describe 'firewall backend rendering' do
     it { is_expected.to render_file('/etc/iptables/rules.v4').with_content(/\*nat\n.*:PREROUTING ACCEPT.*COMMIT\n/m) }
     it { is_expected.not_to render_file('/etc/iptables/rules.v4').with_content(/5555/) }
   end
+
+  context 'disabling a custom table policy' do
+    before do
+      allow(::File).to receive(:exist?).and_call_original
+      allow(::File).to receive(:read).and_call_original
+      allow(::File).to receive(:foreach).and_call_original
+      allow(::File).to receive(:exist?).with('/etc/iptables/rules.v4').and_return(true)
+      allow(::File).to receive(:read).with('/etc/iptables/rules.v4').and_return("*mangle\n:FORWARD DROP\n:custom -\nCOMMIT\n")
+      allow(::File).to receive(:foreach).with('/etc/iptables/rules.v4').and_yield("*mangle\n").and_yield(":FORWARD DROP\n").and_yield(":custom -\n")
+    end
+    recipe do
+      firewall_backend_iptables 'default' do
+        ipv6_enabled false
+        action :disable
+      end
+    end
+    it { is_expected.to run_execute('allow default iptables mangle FORWARD').with(command: %w(iptables -t mangle -P FORWARD ACCEPT)) }
+    it { is_expected.not_to run_execute('allow default iptables mangle custom') }
+  end
 end
 
 describe 'firewall dispatch and rule registration' do

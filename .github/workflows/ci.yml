@@ -80,6 +80,10 @@ jobs:
             kitchen converge "$instance"
             FIREWALL_TEST_RUN_LIST=disable kitchen converge "$instance"
             FIREWALL_TEST_RUN_LIST=disable kitchen verify "$instance" --test-base-path test/lifecycle
+            FIREWALL_TEST_RUN_LIST=custom_policy kitchen converge "$instance"
+            FIREWALL_TEST_RUN_LIST=custom_policy kitchen verify "$instance" --test-base-path test/lifecycle
+            FIREWALL_TEST_RUN_LIST=disable kitchen converge "$instance"
+            FIREWALL_TEST_RUN_LIST=disable kitchen verify "$instance" --test-base-path test/lifecycle
           fi
           case "$TEST_SUITE" in
             firewalld-dbus) export FIREWALL_TEST_RUN_LIST=dbus_delete ;;
@@ -98,7 +102,13 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v7
       - name: Install Cinc Workstation
-        uses: actionshub/chef-install@6.0.0
+        shell: pwsh
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP 'install-cinc.ps1'
+          Invoke-WebRequest -Uri 'https://omnitruck.cinc.sh/install.ps1' -OutFile $installer -ErrorAction Stop
+          . $installer
+          install -project cinc-workstation -version latest
+          "$env:SystemDrive\cinc-project\cinc-workstation\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Install Policyfile
         run: chef install Policyfile.rb
       - name: Test Windows Firewall

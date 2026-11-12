@@ -61,8 +61,9 @@ rules, as before.
   removed from the recipe. It owns the complete direct ruleset. The direct API is
   deprecated upstream; use the D-Bus zone/policy resources for new deployments.
 - Structured iptables/firewalld `pre` and `post` rules now use the NAT table.
-  iptables disable/delete flush all tables recorded in its managed configuration,
-  so redirects do not survive removal. Windows status detection accepts padded
+  iptables disable/delete flush all tables recorded in its managed configuration
+  and reset their built-in chain policies to ACCEPT, so redirects and custom
+  table policies do not survive removal. Windows status detection accepts padded
   `netsh` output and avoids repeated resets.
 - nftables numeric protocols now generate an explicit protocol condition.
   The forwarding chain is correctly named `FORWARD`; address arrays are rendered
