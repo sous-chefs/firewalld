@@ -22,3 +22,10 @@
 ## Examples
 
 See the [recipe used for testing](../../test/fixtures/cookbooks/firewalld-test/recipes/default.rb).
+
+## Removal and convergence
+
+Use `action :delete` to remove the named permanent object and reload firewalld.
+An absent object is a no-op. Unspecified optional properties are preserved;
+explicit false and empty arrays are applied. The description defaults to the
+resource name. Declare `firewalld 'default'` first to install and load D-Bus.

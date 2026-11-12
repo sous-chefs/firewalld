@@ -1,10 +1,14 @@
+# frozen_string_literal: true
+
 unified_mode true
+include FirewallCookbook::Helpers::FirewalldDBus
 
 provides :firewalld_zone,
          os: 'linux'
 
 property :description,
          String,
+         default: lazy { name },
          description: 'see description tag in firewalld.zone(5).'
 property :forward,
          [true, false],
@@ -72,10 +76,13 @@ load_current_value do |new_resource|
     object = firewalld_service[zone_path]
     config_zone = object['org.fedoraproject.FirewallD1.config.zone']
     config_zone.getSettings2.each do |k, v|
-      send(k, v)
+      next unless new_resource.class.properties.key?(k.to_sym)
+      send(k, normalise_dbus_value(k, v))
     end
+    rules_str new_resource.rules_str if same_rich_rules?(rules_str || [], new_resource.rules_str)
   else
     Chef::Log.info "Zone #{new_resource.short} does not exist. Will be created."
+    current_value_does_not_exist!
   end
 end
 
@@ -84,17 +91,21 @@ action :update do
   fw = firewalld_interface(dbus)
   fw_config = config_interface(dbus)
 
+  reload = false
   unless fw_config.getZoneNames.include?(new_resource.short)
-    fw_config.addZone2(new_resource.short, {})
+    converge_by "Add Zone #{new_resource.short}" do
+      fw_config.addZone2(new_resource.short, {})
+    end
+    return if whyrun_mode?
+    reload = true
   end
   zone_path = fw_config.getZoneByName(new_resource.short)
   zone = zone_interface(dbus, zone_path)
 
-  reload = false
   properties = new_resource.class.state_properties.map(&:name)
   properties.each do |property|
     new_value = new_resource.send(property)
-    next unless new_value
+    next if new_value.nil?
     if [:ports, :source_ports].include?(property)
       new_value = DBus.variant('a(ss)', new_value.map { |e| e.split('/') })
     elsif [:forward_ports].include?(property)
@@ -111,6 +122,10 @@ action :update do
       fw.reload
     end
   end
+end
+
+action :delete do
+  delete_dbus_object('Zone', 'zone')
 end
 
 action_class do

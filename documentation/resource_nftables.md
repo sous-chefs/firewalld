@@ -91,3 +91,7 @@ table ip nat {
 }
 
 ```
+
+## Migration lifecycle
+
+Use `action :delete` to stop and disable nftables, remove its package and delete the configured rules file. Install schedules a rebuild even when no rules remain. Configurations are checked with `nft --check` before replacement.

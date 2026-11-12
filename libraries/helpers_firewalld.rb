@@ -1,3 +1,7 @@
+# frozen_string_literal: true
+
+require 'shellwords'
+
 module FirewallCookbook
   module Helpers
     module Firewalld
@@ -9,7 +13,7 @@ module FirewallCookbook
       end
 
       def firewalld_rule!(cmd)
-        shell_out!(cmd, input: 'yes')
+        shell_out!(*Shellwords.split(cmd), input: 'yes')
       end
 
       def firewalld_active?
@@ -37,10 +41,8 @@ module FirewallCookbook
       def firewalld_flush!
         raise 'firewall not active' unless firewalld_active?
 
-        shell_out!('firewall-cmd', '--direct', '--remove-rules', 'ipv4', 'filter', 'INPUT')
-        shell_out!('firewall-cmd', '--direct', '--remove-rules', 'ipv4', 'filter', 'OUTPUT')
-        shell_out!('firewall-cmd', '--direct', '--permanent', '--remove-rules', 'ipv4', 'filter', 'INPUT')
-        shell_out!('firewall-cmd', '--direct', '--permanent', '--remove-rules', 'ipv4', 'filter', 'OUTPUT')
+        clear_direct_rules(false)
+        clear_direct_rules(true)
       end
 
       def firewalld_all_rules_permanent!
@@ -54,10 +56,34 @@ module FirewallCookbook
       def firewalld_save!
         raise 'firewall not active' unless firewalld_active?
 
-        shell_out!('firewall-cmd', '--direct', '--permanent', '--remove-rules', 'ipv4', 'filter', 'INPUT')
-        shell_out!('firewall-cmd', '--direct', '--permanent', '--remove-rules', 'ipv4', 'filter', 'OUTPUT')
-        shell_out!('firewall-cmd', '--direct', '--get-all-rules').stdout.lines do |line|
-          shell_out!("firewall-cmd --direct --permanent --add-rule #{line}")
+        clear_direct_rules(true)
+        shell_out!('firewall-cmd', '--direct', '--get-all-rules').stdout.each_line do |line|
+          shell_out!('firewall-cmd', '--direct', '--permanent', '--add-rule', *Shellwords.split(line))
+        end
+      end
+
+      def clear_direct_rules(permanent)
+        args = ['firewall-cmd', '--direct']
+        args << '--permanent' if permanent
+        shell_out!(*args, '--get-all-rules').stdout.each_line do |line|
+          shell_out!(*args, '--remove-rule', *Shellwords.split(line))
+        end
+      end
+
+      def direct_rules_match?(commands)
+        return true unless commands.all? { |command| Shellwords.split(command).include?('--add-rule') }
+
+        [false, true].all? do |permanent|
+          expected = commands.filter_map do |command|
+            arguments = Shellwords.split(command)
+            next unless arguments.include?('--permanent') == permanent
+
+            arguments.drop(arguments.index('--add-rule') + 1)
+          end
+          arguments = ['firewall-cmd', '--direct', '--get-all-rules']
+          arguments << '--permanent' if permanent
+          actual = shell_out!(*arguments).stdout.lines.map { |line| Shellwords.split(line) }
+          actual.sort == expected.sort
         end
       end
 

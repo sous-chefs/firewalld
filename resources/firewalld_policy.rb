@@ -1,10 +1,14 @@
+# frozen_string_literal: true
+
 unified_mode true
+include FirewallCookbook::Helpers::FirewalldDBus
 
 provides :firewalld_policy,
          os: 'linux'
 
 property :description,
          String,
+         default: lazy { name },
          description: 'see description tag in firewalld.policy(5).'
 property :egress_zones,
          [Array, String],
@@ -68,10 +72,13 @@ load_current_value do |new_resource|
     object = firewalld_service[policy_path]
     config_policy = object['org.fedoraproject.FirewallD1.config.policy']
     config_policy.getSettings.each do |k, v|
-      send(k, v)
+      next unless new_resource.class.properties.key?(k.to_sym)
+      send(k, normalise_dbus_value(k, v))
     end
+    rich_rules new_resource.rich_rules if same_rich_rules?(rich_rules || [], new_resource.rich_rules)
   else
     Chef::Log.info "Zone #{new_resource.short} does not exist. Will be created."
+    current_value_does_not_exist!
   end
 end
 
@@ -82,7 +89,11 @@ action :update do
   reload = false
 
   unless fw_config.getPolicyNames.include?(new_resource.short)
-    fw_config.addPolicy(new_resource.short, {})
+    converge_by "Add Policy #{new_resource.short}" do
+      fw_config.addPolicy(new_resource.short, {})
+    end
+    return if whyrun_mode?
+    reload = true
   end
   policy_path = fw_config.getPolicyByName(new_resource.short)
   policy = policy_interface(dbus, policy_path)
@@ -108,6 +119,10 @@ action :update do
       fw.reload
     end
   end
+end
+
+action :delete do
+  delete_dbus_object('Policy', 'policy')
 end
 
 action_class do

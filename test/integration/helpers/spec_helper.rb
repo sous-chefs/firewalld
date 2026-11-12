@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # helpers
 def firewalld?
   (os.redhat? && os[:release].to_i == 7) || os.name == 'amazon'
