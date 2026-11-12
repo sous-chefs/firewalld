@@ -4,6 +4,24 @@ This file is used to list changes made in each version of the firewall cookbook.
 
 ## Unreleased
 
+## [7.0.0](https://github.com/sous-chefs/firewalld/compare/v6.2.7...v7.0.0) (2026-11-12)
+
+
+### ⚠ BREAKING CHANGES
+
+- migrate firewall management to resources
+- prepare firewalld OCI releases ([#16](https://github.com/sous-chefs/firewalld/issues/16))
+
+### Features
+
+- migrate firewall management to resources ([9a1e0e4](https://github.com/sous-chefs/firewalld/commit/9a1e0e4d68dc4ba5521c8b719c8699fa49b568dd))
+- prepare firewalld OCI releases ([#16](https://github.com/sous-chefs/firewalld/issues/16)) ([e449812](https://github.com/sous-chefs/firewalld/commit/e449812ab5f581b91ba09b29680da8efcaed8147))
+
+
+### Bug Fixes
+
+- migrate to Policyfile ([#11](https://github.com/sous-chefs/firewalld/issues/11)) ([c063b03](https://github.com/sous-chefs/firewalld/commit/c063b0326ec826abc1ecb9656f461ceb522863ce))
+
 ## 6.2.7 - *2023-03-02*
 
 ## 6.2.6 - *2023-02-23*
