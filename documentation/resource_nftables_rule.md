@@ -32,3 +32,7 @@
 ## Examples
 
 See the [recipe used for testing](../test/fixtures/cookbooks/nftables-test/recipes/default.rb).
+
+## Migration lifecycle
+
+Use `action :delete` to schedule a rebuild without this rule. Numeric IP protocols retain their protocol condition; IPv4 or IPv6 address arrays are supported as sets. A rule cannot mix address families.

@@ -1,0 +1,55 @@
+# frozen_string_literal: true
+
+# these tests only for windows
+expected_rules = [
+  /firewall add rule name="HTTP HTTPS" description="HTTP HTTPS" dir=out protocol=tcp localip=any localport=any interfacetype=any remoteip=any remoteport=443,80 action=allow/,
+  /firewall add rule name="prepend" description="prepend" dir=in protocol=tcp localip=any localport=7788 interfacetype=any remoteip=any remoteport=any action=allow/,
+  /firewall add rule name="block-192.168.99.99" description="block-192.168.99.99" dir=in protocol=tcp localip=any localport=any interfacetype=any remoteip=192.168.99.99 remoteport=any action=block/,
+  /firewall add rule name="default winrm" description="allow world to winrm" dir=in protocol=tcp localip=any localport=5989 interfacetype=any remoteip=any remoteport=any action=allow/,
+  /firewall add rule name="ssh22" description="ssh22" dir=in protocol=tcp localip=any localport=22 interfacetype=any remoteip=any remoteport=any action=allow/,
+  /firewall add rule name="ssh2222" description="ssh2222" dir=in protocol=tcp localip=any localport=2200,2222 interfacetype=any remoteip=any remoteport=any action=allow/,
+  /firewall add rule name="temp1" description="temp1" dir=in protocol=tcp localip=any localport=1234 interfacetype=any remoteip=any remoteport=any action=block/,
+  /firewall add rule name="temp2" description="temp2" dir=in protocol=tcp localip=any localport=1235 interfacetype=any remoteip=any remoteport=any action=block/,
+  /firewall add rule name="addremove2" description="addremove2" dir=in protocol=tcp localip=any localport=1236 interfacetype=any remoteip=any remoteport=any action=block/,
+  /firewall add rule name="duplicate0" description="same comment" dir=in protocol=tcp localip=any localport=1111 interfacetype=any remoteip=any remoteport=any action=allow/,
+  /firewall add rule name="duplicate0" description="same comment" dir=in protocol=tcp localip=any localport=5431,5432 interfacetype=any remoteip=any remoteport=any action=allow/,
+  /firewall add rule name="duplicate1" description="same comment" dir=in protocol=tcp localip=any localport=1111 interfacetype=any remoteip=any remoteport=any action=allow/,
+  /firewall add rule name="duplicate1" description="same comment" dir=in protocol=tcp localip=any localport=5431,5432 interfacetype=any remoteip=any remoteport=any action=allow/,
+  /firewall add rule name="ipv6-source" description="ipv6-source" dir=in protocol=tcp localip=any localport=80 interfacetype=any remoteip=2001:db8::ff00:42:8329 remoteport=any action=allow/,
+  /firewall add rule name="range" description="range" dir=in protocol=tcp localip=any localport=1000-1100 interfacetype=any remoteip=any remoteport=any action=allow/,
+  /firewall add rule name="array" description="array" dir=in protocol=tcp localip=any localport=1234,5000-5100,5678 interfacetype=any remoteip=any remoteport=any action=allow/,
+]
+
+describe file("#{ENV['HOME']}/windows-chef.rules") do
+  expected_rules.each do |r|
+    its(:content) { should match(r) }
+  end
+end
+
+describe windows_firewall('public') do
+  it { should be_enabled }
+end
+
+describe windows_firewall('private') do
+  it { should be_enabled }
+end
+
+describe windows_firewall('Domain') do
+  it { should be_enabled }
+end
+
+describe command('netsh advfirewall show currentprofile firewallpolicy | findstr "Firewall Policy"') do
+  its(:stdout) { should match('BlockInbound,AllowOutbound') }
+end
+
+describe command('powershell.exe -NoProfile -Command "(Get-NetFirewallRule -DisplayName protocolnum | Get-NetFirewallPortFilter).Protocol"') do
+  its(:exit_status) { should eq 0 }
+  its(:stdout) { should match(/112/) }
+end
+
+describe command('powershell.exe -NoProfile -Command "(Get-NetFirewallRule -DisplayName \'HTTP HTTPS\' | Get-NetFirewallPortFilter).RemotePort"') do
+  its(:exit_status) { should eq 0 }
+  it 'restricts the outbound rule to the requested ports' do
+    expect(subject.stdout.split).to match_array(%w(80 443))
+  end
+end

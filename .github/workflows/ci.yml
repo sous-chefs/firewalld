@@ -35,18 +35,28 @@ jobs:
             suite: iptables
           - os: centos-stream-9
             suite: iptables
-          - os: debian-11
+          - os: debian-13
             suite: ufw
           - os: debian-12
             suite: ufw
-          - os: debian-11
+          - os: debian-13
             suite: firewalld-dbus
-          - os: debian-11
+          - os: debian-13
             suite: nftables
+          - os: debian-12
+            suite: firewalld-dbus
+          - os: debian-12
+            suite: nftables
+          - os: fedora-latest
+            suite: iptables
+          - os: fedora-latest
+            suite: firewalld-dbus
           - os: ubuntu-2204
             suite: ufw
           - os: ubuntu-2404
             suite: ufw
+          - os: ubuntu-2404
+            suite: default
       fail-fast: false
     steps:
       - name: Check out code
@@ -55,8 +65,58 @@ jobs:
         uses: actionshub/chef-install@6.0.0
       - name: Install Policyfile
         run: chef install Policyfile.rb
+      - name: Load Fedora legacy iptables kernel modules
+        if: matrix.os == 'fedora-latest' && matrix.suite == 'iptables'
+        run: sudo modprobe -a ip_tables ip6_tables iptable_filter ip6table_filter iptable_nat ip6table_nat iptable_mangle ip6table_mangle
       - name: kitchen
         env:
           CHEF_LICENSE: accept-no-persist
           KITCHEN_LOCAL_YAML: kitchen.dokken.yml
-        run: kitchen test "${{ matrix.suite }}-${{ matrix.os }}"
+          TEST_SUITE: ${{ matrix.suite }}
+          TEST_PLATFORM: ${{ matrix.os }}
+        run: |
+          instance="$TEST_SUITE-$TEST_PLATFORM"
+          trap 'kitchen exec "$instance" -c "journalctl --no-pager -n 100" || true' ERR
+          kitchen test "$instance" --destroy=never
+          if [ "$TEST_SUITE" = iptables ]; then
+            FIREWALL_TEST_RUN_LIST=nat_remove kitchen converge "$instance"
+            FIREWALL_TEST_RUN_LIST=nat_remove kitchen verify "$instance" --test-base-path test/lifecycle
+            kitchen converge "$instance"
+            FIREWALL_TEST_RUN_LIST=disable kitchen converge "$instance"
+            FIREWALL_TEST_RUN_LIST=disable kitchen verify "$instance" --test-base-path test/lifecycle
+            FIREWALL_TEST_RUN_LIST=custom_policy kitchen converge "$instance"
+            FIREWALL_TEST_RUN_LIST=custom_policy kitchen verify "$instance" --test-base-path test/lifecycle
+            FIREWALL_TEST_RUN_LIST=disable kitchen converge "$instance"
+            FIREWALL_TEST_RUN_LIST=disable kitchen verify "$instance" --test-base-path test/lifecycle
+          fi
+          case "$TEST_SUITE" in
+            firewalld-dbus) export FIREWALL_TEST_RUN_LIST=dbus_delete ;;
+            nftables) export FIREWALL_TEST_RUN_LIST=nftables_delete ;;
+            *) export FIREWALL_TEST_RUN_LIST=delete ;;
+          esac
+          export FIREWALL_TEST_BACKEND="$TEST_SUITE"
+          kitchen converge "$instance"
+          kitchen verify "$instance" --test-base-path test/lifecycle
+          kitchen destroy "$instance"
+
+  windows:
+    needs: lint-unit
+    runs-on: windows-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+      - name: Install Cinc Workstation
+        shell: pwsh
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP 'install-cinc.ps1'
+          Invoke-WebRequest -Uri 'https://omnitruck.cinc.sh/install.ps1' -OutFile $installer -ErrorAction Stop
+          . $installer
+          install -project cinc-workstation -version latest
+          "$env:SystemDrive\cinc-project\cinc-workstation\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Install Policyfile
+        run: chef install Policyfile.rb
+      - name: Test Windows Firewall
+        env:
+          CHEF_LICENSE: accept-no-persist
+          KITCHEN_LOCAL_YAML: kitchen.windows.yml
+        run: kitchen test windows-windows-latest

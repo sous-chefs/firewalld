@@ -10,6 +10,7 @@ transport:
 
 provisioner:
   name: chef_zero
+  product_name: cinc
   policyfile: Policyfile.rb
   enforce_idempotency: true
   multiple_converge: 2

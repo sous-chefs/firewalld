@@ -7,26 +7,25 @@ provisioner:
   product_name: chef
   product_version: <%= ENV['CHEF_VERSION'] %>
   deprecations_as_errors: true
+  enforce_idempotency: true
+  multiple_converge: 2
   chef_license: accept-no-persist
-  attributes:
-    firewall:
-      allow_ssh: true
-      allow_winrm: true
-      allow_mosh: true
-      allow_loopback: true
-      allow_icmp: true
-      firewalld:
-        permanent: true
 
 verifier:
   name: inspec
+  # <% if ENV['FIREWALL_TEST_RUN_LIST'] %>
+  inspec_tests:
+    - path: test/integration/removal
+  inputs:
+    removal_type: <%= ENV['FIREWALL_TEST_RUN_LIST'] %>
+    removal_backend: <%= ENV['FIREWALL_TEST_BACKEND'] || 'auto' %>
+    # <% end %>
 
 platforms:
   - name: almalinux-8
   - name: almalinux-9
   - name: amazonlinux-2023
   - name: centos-stream-9
-  - name: debian-11
   - name: debian-12
   - name: debian-13
   - name: fedora-latest
@@ -36,23 +35,22 @@ platforms:
 suites:
   - name: default
     provisioner:
-      named_run_list: default
+      named_run_list: <%= ENV['FIREWALL_TEST_RUN_LIST'] || 'default' %>
 
   - name: firewalld
     includes:
       - amazonlinux-2023
     provisioner:
-      named_run_list: firewalld
+      named_run_list: <%= ENV['FIREWALL_TEST_RUN_LIST'] || 'firewalld' %>
 
   - name: ufw
     includes:
-      - debian-11
       - debian-12
       - debian-13
       - ubuntu-22.04
       - ubuntu-24.04
     provisioner:
-      named_run_list: ufw
+      named_run_list: <%= ENV['FIREWALL_TEST_RUN_LIST'] || 'ufw' %>
 
   - name: iptables
     includes:
@@ -62,31 +60,28 @@ suites:
       - centos-stream-9
       - fedora-latest
     provisioner:
-      named_run_list: iptables
+      named_run_list: <%= ENV['FIREWALL_TEST_RUN_LIST'] || 'iptables' %>
     attributes:
-      firewall:
-        ubuntu_iptables: true
-        redhat7_iptables: true
+      firewalld_test:
+        backend: iptables
 
   - name: nftables
     includes:
-      - debian-11
       - debian-12
       - debian-13
     provisioner:
-      named_run_list: nftables
+      named_run_list: <%= ENV['FIREWALL_TEST_RUN_LIST'] || 'nftables' %>
 
   - name: firewalld-dbus
     includes:
-      - debian-11
       - debian-12
       - debian-13
       - fedora-latest
     provisioner:
-      named_run_list: firewalld_dbus
+      named_run_list: <%= ENV['FIREWALL_TEST_RUN_LIST'] || 'firewalld_dbus' %>
 
   - name: windows
     includes:
       - windows-latest
     provisioner:
-      named_run_list: windows
+      named_run_list: <%= ENV['FIREWALL_TEST_RUN_LIST'] || 'windows' %>

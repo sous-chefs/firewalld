@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 name              'firewalld'
 maintainer        'Sous Chefs'
 maintainer_email  'help@sous-chefs.org'
@@ -6,7 +8,7 @@ description       'Provides a set of primitives for managing firewalls and assoc
 version           '6.2.7'
 source_url        'https://github.com/sous-chefs/firewalld'
 issues_url        'https://github.com/sous-chefs/firewalld/issues'
-chef_version      '>= 15.5'
+chef_version      '>= 18.0'
 
 supports 'amazon'
 supports 'almalinux'

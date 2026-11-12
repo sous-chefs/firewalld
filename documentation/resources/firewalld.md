@@ -1,31 +1,23 @@
 # firewalld
 
-[Back to resource list](../README.md#resources)
+Install the daemon and Ruby D-Bus client used by the object resources.
 
-The resource manages the `firewalld`-services and installs `ruby-dbus`
-to the chef environment, so that it may be used in the other resources
-later on.
+| Action | Effect |
+| --- | --- |
+| `:install` (default) | Install the gem/package, reload D-Bus after package changes, enable and start firewalld |
+| `:reload` | Reload permanent configuration into runtime |
+| `:restart` | Restart the daemon |
+| `:disable` | Disable and stop the service |
+| `:delete` | Disable/stop the service and remove the package; independently managed object files are retained |
 
-## Provides
-
-- :firewalld
-
-## Actions
-
-- `:install`
-- `:reload`
-- `:restart`
-- `:disable`
-
-## Properties
-
-There are no properties.
-
-## Examples
+| Property | Type | Default | Purpose |
+| --- | --- | --- | --- |
+| `dbus_gem_version` | String | `0.25.0` | Ruby D-Bus version |
+| `package_options` | String | Unset | Distribution package options |
 
 ```ruby
-firewalld 'arbitrary-name'
+firewalld 'default'
+firewalld_zone 'application' do
+  ports ['443/tcp']
 end
 ```
-
-See the [recipe used for testing](../../test/fixtures/cookbooks/firewalld-test/recipes/default.rb).
