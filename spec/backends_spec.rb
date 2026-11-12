@@ -176,6 +176,7 @@ describe 'firewalld direct rule rendering' do
   platform 'amazon', '2023'
   step_into :firewall_backend_firewalld
   before do
+    stub_command('firewall-cmd --state').and_return(true)
     allow_any_instance_of(FirewallCookbook::Helpers::Firewalld).to receive(:firewalld_default_zone?).and_return(true)
   end
   recipe do

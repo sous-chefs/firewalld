@@ -60,6 +60,8 @@ rules, as before.
 - Firewalld direct-rule reconciliation now covers IPv4 and IPv6, including rules
   removed from the recipe. It owns the complete direct ruleset. The direct API is
   deprecated upstream; use the D-Bus zone/policy resources for new deployments.
+  Service startup waits for the API to become ready. DNF removal keeps dependency
+  packages that other firewall configurations may still use.
 - Structured iptables/firewalld `pre` and `post` rules now use the NAT table.
   iptables disable/delete flush all tables recorded in its managed configuration
   and reset their built-in chain policies to ACCEPT, so redirects and custom

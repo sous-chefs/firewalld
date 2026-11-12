@@ -15,6 +15,12 @@ action :install do
   systemd_unit 'firewalld.service' do
     action %i(enable start)
   end
+  execute "wait for #{new_resource.name} firewalld API" do
+    command %w(firewall-cmd --state)
+    retries 30
+    retry_delay 1
+    not_if 'firewall-cmd --state'
+  end
 end
 
 action :restart do
@@ -29,6 +35,12 @@ action :restart do
   end
   systemd_unit 'firewalld.service' do
     action %i(enable start)
+  end
+  execute "wait for #{new_resource.name} firewalld API" do
+    command %w(firewall-cmd --state)
+    retries 30
+    retry_delay 1
+    not_if 'firewall-cmd --state'
   end
   execute "set #{new_resource.name} firewalld zone" do
     command ['firewall-cmd', "--set-default-zone=#{new_resource.enabled_zone}"]
@@ -68,6 +80,7 @@ end
     end
     if operation == :delete
       package 'firewalld' do
+        options '--setopt=clean_requirements_on_remove=False' if platform_family?('rhel', 'fedora', 'amazon')
         action :remove
       end
     end

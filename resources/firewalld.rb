@@ -24,6 +24,12 @@ action :install do
   systemd_unit 'firewalld.service' do
     action [:enable, :start]
   end
+  execute 'wait for firewalld D-Bus API' do
+    command %w(firewall-cmd --state)
+    retries 30
+    retry_delay 1
+    not_if 'firewall-cmd --state'
+  end
 end
 
 action :reload do
@@ -35,6 +41,12 @@ end
 action :restart do
   systemd_unit 'firewalld.service' do
     action :restart
+  end
+  execute 'wait for restarted firewalld D-Bus API' do
+    command %w(firewall-cmd --state)
+    retries 30
+    retry_delay 1
+    not_if 'firewall-cmd --state'
   end
 end
 
@@ -49,6 +61,7 @@ action :delete do
     action [:disable, :stop]
   end
   package 'firewalld' do
+    options '--setopt=clean_requirements_on_remove=False' if platform_family?('rhel', 'fedora', 'amazon')
     action :remove
   end
 end
