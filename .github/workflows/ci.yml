@@ -73,6 +73,7 @@ jobs:
           TEST_PLATFORM: ${{ matrix.os }}
         run: |
           instance="$TEST_SUITE-$TEST_PLATFORM"
+          trap 'kitchen exec "$instance" -c "journalctl --no-pager -n 100" || true' ERR
           kitchen test "$instance" --destroy=never
           if [ "$TEST_SUITE" = iptables ]; then
             FIREWALL_TEST_RUN_LIST=nat_remove kitchen converge "$instance"
