@@ -50,3 +50,7 @@ describe service('firewalld') do
   it { should be_enabled }
   it { should be_running }
 end
+
+describe command('firewall-cmd --direct --get-all-rules') do
+  its('stdout') { should match(/ipv4 nat PREROUTING.*--dports 5555.*-j REDIRECT --to-ports 6666/) }
+end

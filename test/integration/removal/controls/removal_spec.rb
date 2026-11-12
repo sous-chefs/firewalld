@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 case input('removal_type')
+when 'disable', 'nat_remove'
+  %w(iptables ip6tables).each do |family|
+    describe command("#{family} -t nat -S") do
+      its('exit_status') { should eq 0 }
+      its('stdout') { should_not match(/--dports 5555/) }
+    end
+  end
 when 'dbus_delete'
   {
     'policies' => %w(ptest pminimal),

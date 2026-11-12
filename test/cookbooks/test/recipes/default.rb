@@ -118,3 +118,11 @@ firewall_rule 'port2433' do
 end
 
 include_recipe 'test::windows' if windows?
+
+firewall_rule 'redirect test' do
+  direction :pre
+  port 5555
+  redirect_port 6666
+  command :redirect
+  only_if { rhel? || amazon_linux? || node.dig('firewalld_test', 'backend') == 'iptables' }
+end

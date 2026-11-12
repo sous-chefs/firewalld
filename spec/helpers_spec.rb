@@ -29,3 +29,18 @@ describe 'firewall helper regressions' do
     expect(helper.same_rich_rules?(['rule source address="192.0.2.1" destination address="192.0.2.2" accept'], ['rule source address=192.0.2.2 destination address=192.0.2.1 accept'])).to be false
   end
 end
+
+describe 'Windows firewall status' do
+  before { require_relative '../libraries/helpers_windows' }
+  let(:helper) { Class.new { include FirewallCookbook::Helpers::Windows }.new }
+
+  it 'recognises normal padded netsh output' do
+    allow(helper).to receive(:shell_out!).with('netsh advfirewall show currentprofile').and_return(double(stdout: "State                                 ON\r\n"))
+    expect(helper.active?).to be true
+  end
+
+  it 'recognises a disabled profile' do
+    allow(helper).to receive(:shell_out!).with('netsh advfirewall show currentprofile').and_return(double(stdout: "State                                 OFF\r\n"))
+    expect(helper.active?).to be false
+  end
+end

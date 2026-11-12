@@ -26,9 +26,9 @@
 
 ## Sources
 
-* https://firewalld.org/documentation/
-* https://ubuntu.com/server/docs/how-to/security/firewalls/
-* https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/
+* [firewalld documentation](https://firewalld.org/documentation/)
+* [Ubuntu firewall documentation](https://ubuntu.com/server/docs/how-to/security/firewalls/)
+* [Windows Firewall documentation](https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/)
 
 Linux CI uses Dokken on ubuntu-latest; do not add Vagrant or macOS VM jobs.
 Windows coverage stays in kitchen.windows.yml. Previously retired unsupported

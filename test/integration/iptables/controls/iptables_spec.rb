@@ -57,3 +57,7 @@ describe service('netfilter-persistent') do
   it { should be_enabled }
   it { should be_running }
 end if os.debian?
+
+describe command('iptables -t nat -S PREROUTING') do
+  its('stdout') { should match(/--dports 5555.*-j REDIRECT --to-ports 6666/) }
+end

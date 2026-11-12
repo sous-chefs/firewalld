@@ -41,6 +41,24 @@ describe 'firewall backend rendering' do
     it { is_expected.not_to render_file('/etc/iptables/rules.v4').with_content(/2001:db8::1/) }
   end
 
+  context 'a redirect rule' do
+    recipe do
+      redirect = firewall_rule 'redirect' do
+        direction :pre
+        port 5555
+        redirect_port 6666
+        command :redirect
+        action :nothing
+      end
+      firewall_backend_iptables 'default' do
+        rule_resources [redirect]
+        action :restart
+      end
+    end
+    it { is_expected.to render_file('/etc/iptables/rules.v4').with_content(/\*nat.*-A PREROUTING.*--dports 5555.*--to-ports 6666/m) }
+    it { is_expected.not_to render_file('/etc/iptables/rules.v4').with_content(/-t nat/) }
+  end
+
   context 'an empty IPv4-only ruleset' do
     recipe do
       firewall_backend_iptables 'default' do
@@ -50,6 +68,23 @@ describe 'firewall backend rendering' do
     end
     it { is_expected.to render_file('/etc/iptables/rules.v4').with_content(":INPUT DROP\n") }
     it { is_expected.not_to create_file('/etc/iptables/rules.v6') }
+  end
+
+  context 'removing the last NAT rule' do
+    before do
+      allow(::File).to receive(:exist?).and_call_original
+      allow(::File).to receive(:read).and_call_original
+      allow(::File).to receive(:exist?).with('/etc/iptables/rules.v4').and_return(true)
+      allow(::File).to receive(:read).with('/etc/iptables/rules.v4').and_return("*nat\n-A PREROUTING -p tcp --dport 5555 -j REDIRECT --to-ports 6666\nCOMMIT\n")
+    end
+    recipe do
+      firewall_backend_iptables 'default' do
+        ipv6_enabled false
+        action :restart
+      end
+    end
+    it { is_expected.to render_file('/etc/iptables/rules.v4').with_content(/\*nat\n.*:PREROUTING ACCEPT.*COMMIT\n/m) }
+    it { is_expected.not_to render_file('/etc/iptables/rules.v4').with_content(/5555/) }
   end
 end
 

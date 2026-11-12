@@ -13,13 +13,13 @@ provisioner:
 
 verifier:
   name: inspec
-<% if ENV['FIREWALL_TEST_RUN_LIST'] %>
+  # <% if ENV['FIREWALL_TEST_RUN_LIST'] %>
   inspec_tests:
     - path: test/integration/removal
   inputs:
     removal_type: <%= ENV['FIREWALL_TEST_RUN_LIST'] %>
     removal_backend: <%= ENV['FIREWALL_TEST_BACKEND'] || 'auto' %>
-<% end %>
+    # <% end %>
 
 platforms:
   - name: almalinux-8

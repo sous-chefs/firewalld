@@ -19,7 +19,7 @@ module FirewallCookbook
 
       def active?
         cmd = shell_out!('netsh advfirewall show currentprofile')
-        cmd.stdout =~ /^State\sON/
+        cmd.stdout.match?(/^State\s+ON\b/)
       end
 
       def enable!

@@ -30,13 +30,20 @@ action :restart do
       ":FORWARD #{new_resource.forward_policy}" => 3, ":OUTPUT #{new_resource.output_policy}" => 4, 'COMMIT_FILTER' => 100
     }
     desired[family] = (desired[family] || {}).merge(defaults)
+    nat_rules = {}
     new_resource.rule_resources.each do |rule|
       next if family == 'iptables' && ipv6_rule?(rule)
       next if family == 'ip6tables' && ipv4_rule?(rule)
 
-      desired[family][build_firewall_rule(node, rule, family == 'ip6tables')] = rule.position
+      target = %i(pre post).include?(rule.direction) && !defaults.key?('*nat') ? nat_rules : desired[family]
+      target[build_firewall_rule(node, rule, family == 'ip6tables')] = rule.position
     end
     contents = build_rule_file(desired[family])
+    if !defaults.key?('*nat') && (!nat_rules.empty? || managed_tables(family).include?('nat'))
+      nat_defaults = { '*nat' => 1, ':PREROUTING ACCEPT' => 2, ':INPUT ACCEPT' => 3,
+                       ':OUTPUT ACCEPT' => 4, ':POSTROUTING ACCEPT' => 5, 'COMMIT_NAT' => 100 }
+      contents << build_rule_file(nat_defaults.merge(nat_rules))
+    end
     path = rules_path(family)
     execute "load #{new_resource.name} #{family}" do
       command ["#{family}-restore"]
@@ -53,15 +60,17 @@ end
 %i(flush disable delete).each do |operation|
   action operation do
     iptables_commands(new_resource).each do |family|
-      execute "flush #{new_resource.name} #{family}" do
-        command [family, '-F']
-        only_if { ::File.exist?(rules_path(family)) }
+      managed_tables(family).each do |table|
+        execute "flush #{new_resource.name} #{family} #{table}" do
+          command [family, '-t', table, '-F']
+          only_if { operation == :flush ? ::File.exist?(rules_path(family)) : configured_rules?(family) }
+        end
       end
       if operation != :flush
         %w(INPUT OUTPUT FORWARD).each do |chain|
           execute "allow #{new_resource.name} #{family} #{chain}" do
             command [family, '-P', chain, 'ACCEPT']
-            only_if { ::File.exist?(rules_path(family)) }
+            only_if { configured_rules?(family) }
           end
         end
       end
@@ -102,5 +111,17 @@ action_class do
 
   def firewall_services
     platform_family?('debian') ? ['netfilter-persistent'] : iptables_commands(new_resource)
+  end
+
+  def managed_tables(family)
+    path = rules_path(family)
+    return ['filter'] unless ::File.exist?(path)
+
+    (['filter'] + ::File.read(path).scan(/^\*(\w+)$/).flatten).uniq
+  end
+
+  def configured_rules?(family)
+    path = rules_path(family)
+    ::File.exist?(path) && ::File.read(path) != '# created by chef to allow service to start'
   end
 end

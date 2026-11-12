@@ -74,6 +74,13 @@ jobs:
         run: |
           instance="$TEST_SUITE-$TEST_PLATFORM"
           kitchen test "$instance" --destroy=never
+          if [ "$TEST_SUITE" = iptables ]; then
+            FIREWALL_TEST_RUN_LIST=nat_remove kitchen converge "$instance"
+            FIREWALL_TEST_RUN_LIST=nat_remove kitchen verify "$instance" --test-base-path test/lifecycle
+            kitchen converge "$instance"
+            FIREWALL_TEST_RUN_LIST=disable kitchen converge "$instance"
+            FIREWALL_TEST_RUN_LIST=disable kitchen verify "$instance" --test-base-path test/lifecycle
+          fi
           case "$TEST_SUITE" in
             firewalld-dbus) export FIREWALL_TEST_RUN_LIST=dbus_delete ;;
             nftables) export FIREWALL_TEST_RUN_LIST=nftables_delete ;;

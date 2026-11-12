@@ -104,16 +104,13 @@ module FirewallCookbook
         return new_resource.raw.strip if new_resource.raw
 
         type = new_resource.command
+        table = %i(pre post).include?(new_resource.direction) ? 'nat' : 'filter'
         firewall_rule = if new_resource.direction
-                          "#{ip_version} filter #{CHAIN[new_resource.direction.to_sym]} "
+                          "#{ip_version} #{table} #{CHAIN[new_resource.direction.to_sym]} "
                         else
                           "#{ip_version} filter FORWARD "
                         end
         firewall_rule << "#{new_resource.position} "
-
-        if [:pre, :post].include?(new_resource.direction)
-          firewall_rule << '-t nat '
-        end
 
         # Firewalld order of prameters is important here see example output below:
         # ipv4 filter INPUT 1 -s 1.2.3.4/32 -d 5.6.7.8/32 -i lo -p tcp -m tcp -m state --state NEW -m comment --comment "hello" -j DROP

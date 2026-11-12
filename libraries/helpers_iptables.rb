@@ -17,10 +17,6 @@ module FirewallCookbook
                           +'-A FORWARD '
                         end
 
-        if [:pre, :post].include?(rule_resource.direction)
-          firewall_rule << '-t nat '
-        end
-
         # Iptables order of prameters is important here see example output below:
         # -A INPUT -s 1.2.3.4/32 -d 5.6.7.8/32 -i lo -p tcp -m tcp -m state --state NEW -m comment --comment "hello" -j DROP
         firewall_rule << "-s #{ip_with_mask(rule_resource, rule_resource.source)} " if rule_resource.source && rule_resource.source != '0.0.0.0/0'
