@@ -4,7 +4,7 @@
 expected_rules = [
   /firewall add rule name="prepend" description="prepend" dir=in protocol=tcp localip=any localport=7788 interfacetype=any remoteip=any remoteport=any action=allow/,
   /firewall add rule name="block-192.168.99.99" description="block-192.168.99.99" dir=in protocol=tcp localip=any localport=any interfacetype=any remoteip=192.168.99.99 remoteport=any action=block/,
-  /firewall add rule name="allow world to winrm" description="allow world to winrm" dir=in protocol=tcp localip=any localport=5989 interfacetype=any remoteip=any remoteport=any action=allow/,
+  /firewall add rule name="default winrm" description="allow world to winrm" dir=in protocol=tcp localip=any localport=5989 interfacetype=any remoteip=any remoteport=any action=allow/,
   /firewall add rule name="ssh22" description="ssh22" dir=in protocol=tcp localip=any localport=22 interfacetype=any remoteip=any remoteport=any action=allow/,
   /firewall add rule name="ssh2222" description="ssh2222" dir=in protocol=tcp localip=any localport=2200,2222 interfacetype=any remoteip=any remoteport=any action=allow/,
   /firewall add rule name="temp1" description="temp1" dir=in protocol=tcp localip=any localport=1234 interfacetype=any remoteip=any remoteport=any action=block/,
